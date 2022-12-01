@@ -13,8 +13,10 @@ function read_data(handler::Function, filename)
 	handler(x)
 end
 
-result = 0;
+result = Int[]
 read_data("input") do x
-	global result = max(result, sum(x));
+	push!(result, sum(x))
 end
-println(result);
+sort!(result);
+println(result[end-1])
+println(sum(result[end-2:end]))
