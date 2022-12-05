@@ -19,7 +19,8 @@ for move in split(moves, "\n")
     count = parse(Int32, m[1])
     from = parse(Int32, m[2])
     to = parse(Int32, m[3])
-    prepend!(stacks[to], reverse(splice!(stacks[from], 1:count)))
+    # prepend!(stacks[to], reverse(splice!(stacks[from], 1:count)))
+    prepend!(stacks[to], splice!(stacks[from], 1:count))
 end
 
 for stack in stacks
