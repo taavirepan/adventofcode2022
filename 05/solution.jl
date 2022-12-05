@@ -1,15 +1,7 @@
 stackdata, moves = split(read(stdin, String), "\n\n")
-stackdata = split(stackdata, "\n")
-N = 1 + (length(stackdata[1]) - 2) ÷ 4
-stacks = [[] for i in 1:N]
-for i in 1:length(stackdata)-1
-    row = stackdata[end-i]
-    for j in 0:N-1
-        if row[2 + 4*j] != ' '
-            pushfirst!(stacks[1 + j], row[2 + 4*j])
-        end
-    end
-end
+N = stackdata[end-1] - '0' # I have no shame
+stackdata = reshape(Vector{Char}(stackdata * "\n"), (4 * N, :))
+stacks = [filter(x->x != ' ', stackdata[2 + 4*i,:])[1:end-1] for i in 0:N-1]
 
 for move in split(moves, "\n")
     if move == ""
