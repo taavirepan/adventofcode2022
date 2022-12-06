@@ -6,3 +6,9 @@ for i = 4:length(stream)
         break
     end
 end
+for i = 14:length(stream)
+    if length(Set(stream[i-13:i])) == 14
+        @show i
+        break
+    end
+end
