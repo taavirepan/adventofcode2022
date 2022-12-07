@@ -31,3 +31,8 @@ for (k,v) in fs
     end
 end
 @show task1
+
+target = 30000000 - (70000000 - fs["/"])
+task2 = [v for (k,v) in fs if v >= target]
+sort!(task2)
+@show task2
