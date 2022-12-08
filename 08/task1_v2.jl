@@ -7,15 +7,7 @@ heights = hcat(rows...)
 
 # max that slowly increases, so that only trees strictly larger then previous trees are visible.
 # with regular max() below we would also count the trees that are equal in height previous highest tree
-function maxincr(a, b)
-  if a < b
-    return b
-  end
-  if a == b
-    return a + 1e-6
-  end
-  return a
-end
+maxincr(a,b) = a==b ? a + 1e-6 : max(a,b)
 
 direction1 = accumulate(maxincr, heights, dims=1, init=-1)
 direction2 = reverse(accumulate(maxincr, reverse(heights, dims=1), dims=1, init=-1), dims=1)
