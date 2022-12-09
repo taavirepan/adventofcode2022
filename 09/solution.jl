@@ -13,19 +13,22 @@ function step(head, tail)
 end
 
 directions = Dict('R' => [1, 0], 'L' => [-1, 0], 'U' => [0, 1], 'D' => [0, -1])
-head = [0, 0]
-tail = [0, 0]
+rope = [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]]
 places = Set()
-push!(places, tail)
+push!(places, [0,0])
 for line in readlines(stdin)
-    global head, tail
+    global rope
     direction = directions[line[1]]
     n = parse(Int64, line[3:end])
     for i in 1:n
-        head += direction
-        while step(head, tail) != false
-            tail += step(head, tail)
-            push!(places, tail)
+        rope[1] += direction
+        for j in 1:9
+            while step(rope[j], rope[j+1]) != false
+                rope[j+1] += step(rope[j], rope[j+1])
+                if j == 9
+                    push!(places, rope[10])
+                end
+            end
         end
     end
 
