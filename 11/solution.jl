@@ -8,7 +8,7 @@ end
 
 function lambdify(s)
     expr = Meta.parse(replace(s, "new =" => "old ->"))
-    Base.eval(expr)
+    eval(expr)
 end
 
 function Base.parse(::Type{Monkey}, s)
