@@ -24,7 +24,7 @@ end
 throw_to(monkey, item) = 1 + (item % monkey.test == 0 ? monkey.iftrue : monkey.iffalse)
 
 function solve(monkeys; divide = 1, rounds = 10000)
-    gcd = prod(monkey.test for monkey in monkeys)
+    lcm = prod(monkey.test for monkey in monkeys)
     result = zeros(Int, length(monkeys))
     items = [copy(monkey.items) for monkey in monkeys]
     
@@ -32,7 +32,7 @@ function solve(monkeys; divide = 1, rounds = 10000)
         for (i, monkey) in enumerate(monkeys)
             while length(items[i]) > 0
                 result[i] += 1
-                item = (monkey.operation(popfirst!(items[i])) ÷ divide) % gcd
+                item = (monkey.operation(popfirst!(items[i])) ÷ divide) % lcm
                 push!(items[throw_to(monkey, item)], item)
             end
         end
