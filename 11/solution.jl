@@ -21,27 +21,29 @@ function Base.parse(::Type{Monkey}, s)
     )
 end
 
-input = readlines(stdin)
-monkeys = []
-gcd = 1
-for data in Iterators.partition(input, 7)
-    push!(monkeys, parse(Monkey, data))
-    global gcd *= monkeys[end].test
-end
+throw_to(monkey, item) = 1 + (item % monkey.test == 0 ? monkey.iftrue : monkey.iffalse)
 
-task2 = zeros(Int, length(monkeys))
-for round = 1:10000
-    for (i, monkey) in enumerate(monkeys)
-        while length(monkey.items) > 0
-            task2[i] += 1
-            item = monkey.operation(popfirst!(monkey.items)) % gcd
-            if item % monkey.test == 0
-                push!(monkeys[monkey.iftrue + 1].items, item)
-            else
-                push!(monkeys[monkey.iffalse + 1].items, item)
+function solve(monkeys; divide = 1, rounds = 10000)
+    gcd = prod(monkey.test for monkey in monkeys)
+    result = zeros(Int, length(monkeys))
+    items = [copy(monkey.items) for monkey in monkeys]
+    
+    for round = 1:rounds
+        for (i, monkey) in enumerate(monkeys)
+            while length(items[i]) > 0
+                result[i] += 1
+                item = (monkey.operation(popfirst!(items[i])) ÷ divide) % gcd
+                push!(items[throw_to(monkey, item)], item)
             end
         end
     end
+    sort!(result)
+    @show result[end] * result[end - 1]
 end
-sort!(task2)
-@show task2[end] * task2[end - 1]
+
+monkeys = []
+for data in Iterators.partition(readlines(stdin), 7)
+    push!(monkeys, parse(Monkey, data))
+end
+solve(monkeys, divide=3, rounds=20)
+solve(monkeys)
