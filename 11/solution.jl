@@ -23,16 +23,18 @@ end
 
 input = readlines(stdin)
 monkeys = []
+gcd = 1
 for data in Iterators.partition(input, 7)
     push!(monkeys, parse(Monkey, data))
+    global gcd *= monkeys[end].test
 end
 
-task1 = zeros(Int, length(monkeys))
-for round = 1:20
+task2 = zeros(Int, length(monkeys))
+for round = 1:10000
     for (i, monkey) in enumerate(monkeys)
         while length(monkey.items) > 0
-            task1[i] += 1
-            item = monkey.operation(popfirst!(monkey.items)) ÷ 3
+            task2[i] += 1
+            item = monkey.operation(popfirst!(monkey.items)) % gcd
             if item % monkey.test == 0
                 push!(monkeys[monkey.iftrue + 1].items, item)
             else
@@ -41,5 +43,5 @@ for round = 1:20
         end
     end
 end
-sort!(task1)
-@show task1[end] * task1[end - 1]
+sort!(task2)
+@show task2[end] * task2[end - 1]
