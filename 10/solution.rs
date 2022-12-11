@@ -1,7 +1,6 @@
 use std::io;
 use std::io::Read;
 use std::convert::TryInto;
-use std::convert::TryFrom;
 
 fn main()
 {
@@ -13,22 +12,18 @@ fn main()
     let mut task2 = ['.'; 40*6];
     for (n, number) in numbers.enumerate()
     {
-        let i:i32 = (n + 1).try_into().unwrap();
         let sx = n % 40;
         let sy = n / 40;
-        if i32::try_from(sx).unwrap() <= x + 1 && x <= i32::try_from(sx + 1).unwrap()
+        if (x-1..x+2).contains(&sx.try_into().unwrap())
         {
             task2[sx + sy*40] = '#';
         }
-        if vec![20, 60, 100, 140, 180, 220].contains(&i)
+        if vec![20, 60, 100, 140, 180, 220].contains(&(n+1))
         {
-            task1 += i * x;
+            let value: i32 = (n+1).try_into().unwrap();
+            task1 += value * x;
         }
-        x += match number
-        {
-            Ok(i) => i,
-            Err(_) => 0,
-        };
+        x += number.unwrap_or_default();
     }
     println!("task1 = {task1}");
     for i in 0..6
