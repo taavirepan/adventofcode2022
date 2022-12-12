@@ -6,8 +6,15 @@ function search(graph, from, to)
     graph[to] = 'z'
     while true
         sort!(next, lt=(a,b)->a[2] > b[2])
+        if isempty(next)
+            return 9999999
+        end
+
         current, distance = pop!(next)
         while current in visited
+            if isempty(next)
+                return 9999999
+            end
             current, distance = pop!(next)
         end
         push!(visited, current)
@@ -34,4 +41,10 @@ for (i,line) in enumerate(readlines(stdin))
     data = hcat(data, collect(line))
 end
 
-@show search(data, findfirst(data .== 'S'), findfirst(data .== 'E'))
+to = findfirst(data .== 'E')
+@show search(data, findfirst(data .== 'S'), to)
+best = 9999999
+for idx in findall(data .== 'a')
+    global best = min(best, search(data, idx, to))
+end
+@show best
