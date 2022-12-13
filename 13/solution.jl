@@ -1,8 +1,6 @@
-function compare(a::Integer, b::Integer)
-    if a != b
-        return a < b
-    end
-end
+compare(a::Integer, b::Integer) = a == b ? nothing : a < b
+compare(a::Vector, b::Integer) = compare(a, [b])
+compare(a::Integer, b::Vector) = compare([a], b)
 
 function compare(a::Vector, b::Vector)
     for (x,y) in Iterators.zip(a, b)
@@ -11,13 +9,9 @@ function compare(a::Vector, b::Vector)
             return r
         end
     end
-    if length(a) != length(b)
-        return length(a) < length(b)
-    end
+    return compare(length(a), length(b))
 end
 
-compare(a::Vector, b::Integer) = compare(a, [b])
-compare(a::Integer, b::Vector) = compare([a], b)
 
 task1 = 0
 alldata = Vector{Any}()
