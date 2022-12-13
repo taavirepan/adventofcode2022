@@ -3,13 +3,9 @@ compare(a::Vector, b::Integer) = compare(a, [b])
 compare(a::Integer, b::Vector) = compare([a], b)
 
 function compare(a::Vector, b::Vector)
-    for (x,y) in Iterators.zip(a, b)
-        r = compare(x, y)
-        if r != nothing
-            return r
-        end
-    end
-    return compare(length(a), length(b))
+    pairs = Iterators.map(p->compare(p...), Iterators.zip(a, b))
+    pairs = Iterators.filter(r->r!=nothing, pairs)
+    return isempty(pairs) ? compare(length(a), length(b)) : first(pairs)
 end
 
 
@@ -28,14 +24,7 @@ for (i, data) in enumerate(Iterators.partition(readlines(stdin), 3))
 end
 @show task1
 
-function lt(a,b)
-    r = compare(a,b)
-    if r == nothing
-        return false
-    end
-    return r
-end
-sort!(alldata, lt=lt)
+sort!(alldata, lt=compare)
 
 task2 = 1
 for (i,x) in enumerate(alldata)
