@@ -59,29 +59,22 @@ fn compare2(a: &[u8], b: &[u8]) -> bool
 {
 	let mut i: usize = 0;
 	let mut j: usize = 0;
-	let mut ad = vec![];
-	let mut bd = vec![];
+	let mut length = vec![];
 	let mut aw = vec![];
 	let mut bw = vec![];
 	
 	macro_rules! open {
 		($x:expr, $y:expr) => {
-			ad.push(1);
-			bd.push(1);
+			length.push(1);
 			aw.push($x);
 			bw.push($y);
 		}
 	}
 	macro_rules! close {
 		() => {
-			let a = ad.pop();
-			let b = bd.pop();
+			length.pop();
 			aw.pop();
 			bw.pop();
-			if (a != b)
-			{
-				return a < b;
-			}
 		}
 	}
 	macro_rules! check {
@@ -104,15 +97,14 @@ fn compare2(a: &[u8], b: &[u8]) -> bool
 		match (a[i], b[j])
 		{
 			(b',', b',') => {
-				*ad.last_mut().unwrap()+=1;
-				*bd.last_mut().unwrap()+=1;
-				check!(ad, aw, true);
-				check!(bd, bw, false);
+				*length.last_mut().unwrap()+=1;
+				check!(length, aw, true);
+				check!(length, bw, false);
 			}
 			(b'[', b'[') => {open!(-1,-1);}
 			(b']', b']') => {close!();}
-			(b'[', b']') => {return false;}
-			(b']', b'[') => {return true;}
+			(b'[', b']') => {return false;} /* i think so, but i am not sure */
+			(b']', b'[') => {return true;}  /* same */
 			(x, y) if x == y => {}
 			(b'[',_) => {open!(-1,1); i += 1; continue}
 			(_,b'[') => {open!(1,-1); j += 1; continue}
