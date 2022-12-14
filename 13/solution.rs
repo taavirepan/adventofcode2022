@@ -103,13 +103,11 @@ fn compare2(a: &[u8], b: &[u8]) -> bool
 			}
 			(b'[', b'[') => {open!(-1,-1);}
 			(b']', b']') => {close!();}
-			(b'[', b']') => {return false;} /* i think so, but i am not sure */
-			(b']', b'[') => {return true;}  /* same */
 			(x, y) if x == y => {}
-			(b'[',_) => {open!(-1,1); i += 1; continue}
-			(_,b'[') => {open!(1,-1); j += 1; continue}
 			(b']',_) => {check!(bw, true); close!(); i += 1; continue}
 			(_,b']') => {check!(aw, false); close!(); j += 1; continue}
+			(b'[',_) => {open!(-1,1); i += 1; continue}
+			(_,b'[') => {open!(1,-1); j += 1; continue}
 			(x, y) => {return x < y}
 		}
 
