@@ -7,19 +7,14 @@ function draw!(cave, xy1, xy2)
     cave[xy2...] = 1
 end
 
-function fallingsand!(cave, x, y)
-    while y != size(cave, 2)
-        if cave[x, y+1] == 0
-            y += 1
-        elseif cave[x-1, y+1] == 0
-            x -= 1
-            y += 1
-        elseif cave[x+1, y+1] == 0
-            x += 1
-            y += 1
-        else
-            cave[x, y] = 2
+function fallingsand!(cave, x, _)
+    for y = 1:size(cave, 2)-1
+        nx = filter(z->cave[z,y+1]==0, [x, x-1, x+1])
+        if length(nx) == 0
+            cave[x,y] = 2
             return false
+        else
+            x = first(nx)
         end
     end
     return true
