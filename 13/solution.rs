@@ -9,13 +9,6 @@ use serde_json::{Value,to_value};
  */
 fn jsoncompare(a: &Value, b: &Value) -> Option<bool>
 {
-	let r = jsoncomparex(a, b);
-	println!("jsoncompare({a:?}; {b:?}) -> {r:?}");
-	return r;
-}
-
-fn jsoncomparex(a: &Value, b: &Value) -> Option<bool>
-{
 	if a.is_i64() && b.is_i64()
 	{
 		let x = a.as_i64().unwrap();
@@ -106,7 +99,6 @@ fn compare2(a: &[u8], b: &[u8]) -> bool
 		}
 	}
 	
-	println!("{:?}\n{:?}", str::from_utf8(a), str::from_utf8(b));
 	loop
 	{
 		if i == a.len() && j != b.len()
@@ -118,7 +110,6 @@ fn compare2(a: &[u8], b: &[u8]) -> bool
 			return false;
 		}
 		
-		println!("{i}/{j} {}/{} {ad:?}:{aw:?} / {bd:?}:{bw:?}", a[i] as char, b[j] as char);
 		match (a[i], b[j])
 		{
 			(b',', b',') => {
@@ -152,7 +143,6 @@ fn main()
 	{
 		let line1 = it.next().unwrap().unwrap();
 		let line2 = it.next().unwrap().unwrap();
-		println!("{line1} : {line2}");
 		let r = compare(line1.as_bytes(), line2.as_bytes());
 		let r2 = compare2(line1.replace("10","a").as_bytes(), line2.replace("10","a").as_bytes());
 		if r != r2
@@ -162,10 +152,8 @@ fn main()
 		}
 		if r
 		{
-			//println!("=> {i}");
 			task1 += i;
 		}
-		//println!("=> {r}");
 		if it.next().is_none()
 		{
 			break;
