@@ -1,0 +1,12 @@
+[package]
+name = "solution"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde_json = "1.0.89"
+serde = "1.0.150"
+
+[[bin]]
+name = "solution"
+path = "solution.rs"
