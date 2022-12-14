@@ -1,10 +1,9 @@
 function draw!(cave, xy1, xy2)
     d = clamp.(xy2 .- xy1, -1, 1)
+    cave[xy1...] = 1
     while xy1 != xy2
-        cave[xy1...] = 1
-        xy1 += d
+        cave[(xy1+=d)...] = 1
     end
-    cave[xy2...] = 1
 end
 
 function fallingsand!(cave, x, _)
@@ -13,9 +12,8 @@ function fallingsand!(cave, x, _)
         if length(nx) == 0
             cave[x,y] = 2
             return false
-        else
-            x = first(nx)
         end
+        x = first(nx)
     end
     return true
 end
@@ -25,15 +23,13 @@ floor = 0
 for line in readlines(stdin)
     global floor
     data = map(x->map(y->parse(Int,y), split(x, ",")), split(line, " -> "))
-    for i = 2:length(data)
-        floor = max(floor, data[i-1][2])
-        floor = max(floor, data[i][2])
-        draw!(cave, data[i-1] + [0, 1], data[i] + [0, 1])
+    for (from, to) = zip(data[1:end], data[2:end])
+        floor = max(floor, from[2], to[2])
+        draw!(cave, from + [0, 1], to + [0, 1])
     end
 end
-task1 = copy(cave)
-cave[:,floor + 3] .= 1
 
+task1 = copy(cave)
 for i = 0:1000
     if fallingsand!(task1, 500, 1)
         println("task1 = ", i)
@@ -41,6 +37,7 @@ for i = 0:1000
     end
 end
 
+cave[:,floor + 3] .= 1
 for i = 0:100000
     fallingsand!(cave, 500, 1)
     if cave[500, 1] != 0
