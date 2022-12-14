@@ -53,7 +53,7 @@ fn compare(a: &[u8], b: &[u8]) -> bool
 }
 
 /*
- * Second solution, no external code.
+ * Way more complicated solution, but at least no parsing.
  */
 fn compare2(a: &[u8], b: &[u8]) -> bool
 {
@@ -99,17 +99,8 @@ fn compare2(a: &[u8], b: &[u8]) -> bool
 		}
 	}
 	
-	loop
+	while i < a.len() && j < b.len()
 	{
-		if i == a.len() && j != b.len()
-		{
-			return true;
-		}
-		if i != a.len() && j == b.len()
-		{
-			return false;
-		}
-		
 		match (a[i], b[j])
 		{
 			(b',', b',') => {
@@ -133,6 +124,7 @@ fn compare2(a: &[u8], b: &[u8]) -> bool
 		i += 1;
 		j += 1;
 	}
+	return a.len() < b.len();
 }
 
 fn main()
@@ -144,6 +136,8 @@ fn main()
 		let line1 = it.next().unwrap().unwrap();
 		let line2 = it.next().unwrap().unwrap();
 		let r = compare(line1.as_bytes(), line2.as_bytes());
+		// "10" -> "a" is ugly hack, since my compare2() assumes that all numbers have the same length.
+		// It works because '9' < 'a', so comparisons work out.
 		let r2 = compare2(line1.replace("10","a").as_bytes(), line2.replace("10","a").as_bytes());
 		if r != r2
 		{
