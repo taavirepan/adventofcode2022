@@ -14,11 +14,8 @@ function closest_is_away(sensors, x, y)
     return true
 end
 
-sensors = []
-beacons = Set()
-candidates = Set()
-for (i,line) in enumerate(readlines(stdin))
-    sx, sy, bx, by = map(x->parse(Int,x.match), eachmatch(r"-?\d+", line))
+function process!(sensors, beacons, candidates, beacon)
+    sx, sy, bx, by = beacon
     distance = abs(sx - bx) + abs(sy - by)
     push!(sensors, (sx, sy, distance))
     if by == yyy
@@ -39,6 +36,14 @@ for (i,line) in enumerate(readlines(stdin))
             push!(candidates, (x2, y))
         end
     end
+end
+
+sensors = []
+beacons = Set()
+candidates = Set()
+for (i,line) in enumerate(readlines(stdin))
+    beacon = map(x->parse(Int,x.match), eachmatch(r"-?\d+", line))
+    process!(sensors, beacons, candidates, beacon)
     @show i, length(candidates)
 end
 sort!(sensors)
