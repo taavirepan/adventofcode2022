@@ -39,9 +39,38 @@ end
 
 still_out(a) = a[1] < 0 || a[2] < 0 || a[1] > 2*yyy || a[2] > 2*yyy
 
+function linelineintersect(start1, direction1, start2, direction2)
+    if direction1 == direction2
+        a = start1 - direction1 * start1[1]
+        b = start2 - direction2 * start2[1]
+        return a == b
+    end
+    @assert direction1[2] == 1 && direction2[2] == 1
+    offset2 = start2 - start1
+    v = (offset2[1] - offset2[2]*direction1[1]) ÷ (direction1[1] - direction2[1])
+    u = offset2[2] + v
+    return start1 + u*direction1
+end
+
+function cuts(start, stop, sensor, distance)
+    direction = clamp.(stop - start, -1, 1)
+    other_direction = [-direction[1], direction[2]]
+    pts = Any[
+        linelineintersect(start, direction, sensor - [0, distance], other_direction),
+        linelineintersect(start, direction, sensor - [0, distance], direction),
+        linelineintersect(start, direction, sensor + [0, distance], other_direction),
+        linelineintersect(start, direction, sensor + [0, distance], direction),
+    ]
+    pts = filter(p->isa(p,Vector), pts)
+    pts = filter(p->start[2] <= p[2] && p[2] < stop[2], pts)
+    if length(pts) < 2
+        return stop, start
+    end
+    sort!(pts, lt=(a,b)->a[2]<b[2])
+    pts[1] + direction, pts[2] - direction
+end
+
 function edgeintersect(start, stop, sensor, distance)
-    # This could be even faster, if we find the interesections using
-    # math, not while loops. But my head hurts already.
     direction = clamp.(stop - start, -1, 1)
     hd = start[1] - sensor[1] + (sensor[2] - start[2]) * direction[1]
     if hd > distance
@@ -53,13 +82,11 @@ function edgeintersect(start, stop, sensor, distance)
     while dist(stop..., sensor...) < distance
         stop -= direction
     end
-    cut1 = start
-    while cut1 != stop && dist(cut1..., sensor...) >= distance
-        cut1 += direction
-    end
-    cut2 = stop
-    while cut2 != start && dist(cut2..., sensor...) >= distance
-        cut2 -= direction
+    c = cuts(start, stop, sensor, distance)
+    if dist(c[1]..., sensor...) <= distance
+        cut1, cut2 = c
+    else
+        cut1, cut2 = stop, start
     end
     if cut1 == stop
         return [(start, stop)]
