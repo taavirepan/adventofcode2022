@@ -123,7 +123,9 @@ function solved(sensors, a, b)
             return false
         end
     end
-    @show a, b, b-a
+    @assert a == b
+    @show a
+    @show a[1]*4000000 + a[2]
     return true
 end
 
