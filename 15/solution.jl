@@ -1,33 +1,45 @@
-#y = 10
-y = 2000000
+#yyy = 10
+yyy = 2000000
+
+function dist(x1, y1, x2, y2)
+    return abs(x1-x2) + abs(y1-y2)
+end
+
+function closest_is_away(sensors, x, y)
+    for (sx, sy, d) in sensors
+        if abs(sx-x)+abs(sy-y) <= d
+            return false
+        end
+    end
+    return true
+end
 
 sensors = []
 beacons = Set()
-for line in readlines(stdin)
-    sx, sy, bx, by = map(x->parse(Int,x.match), eachmatch(r"\d+", line))
+candidates = Set()
+for (i,line) in enumerate(readlines(stdin))
+    sx, sy, bx, by = map(x->parse(Int,x.match), eachmatch(r"-?\d+", line))
     distance = abs(sx - bx) + abs(sy - by)
     push!(sensors, (sx, sy, distance))
-    if by == y
+    if by == yyy
         push!(beacons, bx)
     end
-end
-sort!(sensors)
-
-task1 = 0
-sensor = 1
-for x = sensors[1][1]-sensors[1][3]:sensors[end][1]+sensors[end][3]
-    global sensor, task1
-    if x in beacons
-        continue
-    end
-    for sensor = 1:length(sensors)
-        sx, sy, distance = sensors[sensor]
-        if abs(x - sx) + abs(y - sy) <= distance
-            task1 += 1
-            break
+    for c in candidates
+        if dist(c..., sx, sy) <= distance
+            setdiff!(candidates, [c])
         end
     end
+    for y = max(0,sy-distance-1):min(2*yyy,sy+distance+1)
+        x1 = (distance + 1) - abs(y - sy) + sx
+        x2 = -(distance + 1) + abs(y - sy) + sx
+        if 0 <= x1 && x1 <= 2*yyy && closest_is_away(sensors, x1, y)
+            push!(candidates, (x1, y))
+        end
+        if 0 <= x2 && x2 <= 2*yyy && closest_is_away(sensors, x2, y)
+            push!(candidates, (x2, y))
+        end
+    end
+    @show i, length(candidates)
 end
-@show task1
-
-#2486888 wroong
+sort!(sensors)
+@show candidates
