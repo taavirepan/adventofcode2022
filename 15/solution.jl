@@ -62,37 +62,39 @@ function cuts(start, stop, sensor, distance)
         linelineintersect(start, direction, sensor + [0, distance], direction),
     ]
     pts = filter(p->isa(p,Vector), pts)
-    pts = filter(p->start[2] <= p[2] && p[2] < stop[2], pts)
+    pts = filter(p->start[2] < p[2] && p[2] < stop[2], pts)
+    if length(pts) == 1
+        return pts[1], nothing
+    end
     if length(pts) < 2
-        return stop, start
+        return nothing, nothing
     end
     sort!(pts, lt=(a,b)->a[2]<b[2])
-    pts[1] + direction, pts[2] - direction
+    nothing, (pts[1] + direction, pts[2] - direction)
 end
 
 function edgeintersect(start, stop, sensor, distance)
     direction = clamp.(stop - start, -1, 1)
-    hd = start[1] - sensor[1] + (sensor[2] - start[2]) * direction[1]
-    if hd > distance
-        return [(start, stop)]
-    end
-    while dist(start..., sensor...) < distance
-        start += direction
-    end
-    while dist(stop..., sensor...) < distance
-        stop -= direction
-    end
-    c = cuts(start, stop, sensor, distance)
-    if dist(c[1]..., sensor...) <= distance
-        cut1, cut2 = c
+    p, c = cuts(start, stop, sensor, distance)
+    if !isnothing(p)
+        if dist(start..., sensor...) < distance
+            start = p
+        elseif dist(stop..., sensor...) < distance
+            stop = p
+        end
+    elseif !isnothing(c)
+        if dist(c[1]..., sensor...) <= distance
+            cut1, cut2 = c
+            return [(start, cut1), (cut2, stop)]
+        end
     else
-        cut1, cut2 = stop, start
+        if dist(start..., sensor...) < distance
+            start = stop
+        elseif dist(stop..., sensor...) < distance
+            stop = start
+        end
     end
-    if cut1 == stop
-        return [(start, stop)]
-    else
-        return [(start, cut1), (cut2, stop)]
-    end
+    return [(start, stop)]
 end
 
 function solved(sensors, a, b)
@@ -126,6 +128,7 @@ function solved(sensors, a, b)
     @assert a == b
     @show a
     @show a[1]*4000000 + a[2]
+    @assert a[1]*4000000 + a[2] == 13360899249595
     return true
 end
 
