@@ -1,4 +1,5 @@
 using Profile
+using DataStructures
 
 struct Vertex
     player1::Int8
@@ -45,7 +46,6 @@ function edges(v)
     if v.opened == fully_opened
         return [(0, Vertex(1, 1, 0, fully_opened))]
     end
-    global el -= time_ns()
     if flow_rates[v.player1] > 0 && flow_rates[v.player2] > 0 && 
         v.opened&bits[v.player1] == 0 && v.opened&bits[v.player2] == 0 && 
         v.player1 != v.player2
@@ -67,20 +67,20 @@ function edges(v)
             push!(ret, (0, Vertex(link1, link2, v.time - 1, v.opened)))
         end
     end
-    el += time_ns()
     return ret
 end
 
 function shortest_path(vertex)
     # max_score(x) = 0
-    queue = [vertex]
+    queue = PriorityQueue{Vertex, Pair{Int, Vertex}}()
     gScore = Dict(vertex => 0)
     fScore = Dict(vertex => max_score(vertex))
     visited = Set()
     ret = 0
     skipped = 0
+    enqueue!(queue, vertex, fScore[vertex] => vertex)
     while length(queue) > 0
-        current = popfirst!(queue)
+        current = dequeue!(queue)
         if key(current) in visited
             skipped += 1
             continue
@@ -100,9 +100,12 @@ function shortest_path(vertex)
             if !(target in keys(gScore)) || g < gScore[target]
                 gScore[target] = g
                 fScore[target] = g + max_score(target)
-                # i = searchsorted(queue, target; lt=(a,b)->fScore[a]<fScore[b])
-                i = searchsorted(queue, target; by=(a)->fScore[a])
-                insert!(queue, first(i), target)
+                global el -= time_ns()
+                if target in keys(queue)
+                    delete!(queue, target)
+                end
+                enqueue!(queue, target, fScore[target] => target)
+                el += time_ns()
             end
         end
     end
@@ -162,7 +165,7 @@ end
 t = -time_ns()
 el = 0
 @show shortest_path(
-    Vertex(index["AA"], index["AA"], 26, 0)
+    Vertex(index["AA"], index["AA"], 20, 0)
 )
 t += time_ns()
 
