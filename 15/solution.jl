@@ -139,7 +139,6 @@ for (i,line) in enumerate(readlines(stdin))
     push!(sensors, (sx,sy,d))
 end
 sort!(sensors,lt=(a,b)->a[2]-a[3]<b[2]+b[3])
-
 for (sx,sy,d) in sensors
     if solved(sensors, [sx, sy-d-1], [sx-d-1, sy])
         break
