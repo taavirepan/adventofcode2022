@@ -1,4 +1,3 @@
-using Profile
 using DataStructures
 
 struct Vertex
@@ -16,18 +15,13 @@ function max_score(v::Vertex)
     ret = 0
     flows = []
     for (k,b) in bits
-    # for k = 1:length(bits)
-    #     b = 2^k
         if v.opened&b == 0
-            # d1 = distance_map[v.player1 => k]
-            # d2 = distance_map[v.player2 => k]
-            # ret -= flow * (v.time - 1 - min(d1, d2))
             push!(flows, -flow_rates[k])
         end
     end
     sort!(flows)
     for (i,f) in enumerate(flows)
-        i = max(1, i-1)
+        i = max(1, i-1) # bit hackish
         if v.time - i <= 0
             return ret
         end
@@ -75,65 +69,38 @@ function shortest_path(vertex)
     queue = PriorityQueue{Vertex, Pair{Int, Vertex}}()
     gScore = Dict(vertex => 0)
     fScore = Dict(vertex => max_score(vertex))
-    visited = Set()
     ret = 0
     skipped = 0
     enqueue!(queue, vertex, fScore[vertex] => vertex)
+	it = 0
     while length(queue) > 0
         current = dequeue!(queue)
-        if key(current) in visited
-            skipped += 1
-            continue
-        end
-        push!(visited, key(current))
         if current.time == 0
-            # if current.opened == fully_opened
-            #     return gScore[current]
-            # end
+            if gScore[current] < ret
+                @show it, ret=>gScore[current]
+            end
             ret = min(ret, gScore[current])
-            empty!(queue)
+            empty!(queue) # yeah, let's just hope for the best
             continue
         end
+        global el -= time_ns()
         for (cost, target) in edges(current)
             target = Vertex(min(target.player1, target.player2), max(target.player1, target.player2), target.time, target.opened)
             g = gScore[current] + cost
             if !(target in keys(gScore)) || g < gScore[target]
                 gScore[target] = g
                 fScore[target] = g + max_score(target)
-                global el -= time_ns()
                 if target in keys(queue)
                     delete!(queue, target)
                 end
                 enqueue!(queue, target, fScore[target] => target)
-                el += time_ns()
             end
         end
+        el += time_ns()
+        it += 1
     end
-    @show length(visited)
-    @show skipped
+    @show  it
     ret
-end
-
-function full_search(graph)
-    ret = Dict()
-    for (k, edges) in graph
-        ret[k=>k] = 0
-        for e in edges
-            ret[k=>e] = 1
-        end
-    end
-    for k in keys(graph)
-        for i in keys(graph)
-            for j in keys(graph)
-                if (i=>k) in keys(ret) && (k=>j) in keys(ret)
-                    if !((i=>j) in keys(ret)) || ret[i=>j] > ret[i=>k] + ret[k=>j]
-                        ret[i=>j] = ret[i=>k] + ret[k=>j]
-                    end
-                end
-            end
-        end
-    end
-    return ret
 end
 
 flow_rates = Dict()
@@ -158,18 +125,12 @@ for i in keys(links)
     links[i] = [index[t] for t in links[i]]
 end
 
-# distance_map = full_search(links)
-
-# flow_rates = [flow_rates[i] for i=1:length(flow_rates)]
-
 t = -time_ns()
 el = 0
 @show shortest_path(
-    Vertex(index["AA"], index["AA"], 20, 0)
+    Vertex(index["AA"], index["AA"], 26, 0)
 )
 t += time_ns()
-
-# Profile.print(mincount=1000)
 
 @show 100*el/t
 @show el*1e-9, t*1e-9
