@@ -77,6 +77,15 @@ function draw(rocks)
     println("=======")
 end
 
+function height(rocks)
+    for y = size(rocks, 1):-1:1
+        if maximum(rocks[y,:]) != 0
+            return y
+        end
+    end
+    return 0
+end
+
 rocktypes = [
     [(1, 1), (1, 1), (1, 1), (1, 1)],
     [(2, 2), (1, 3), (2, 2)],
@@ -85,15 +94,67 @@ rocktypes = [
     [(1, 2), (1, 2)]
 ]
 jetpatterns = readchomp(stdin)
+jp = jetpatterns
 
 rocks = zeros(Int8, 4, 7)
-for i = 1:2022
-    global rocks, jetpatterns
-    rocks, jetpatterns = simulate(rocks, rocktypes[(i-1) % length(rocktypes) + 1])
-end
-for y = size(rocks, 1):-1:1
-    if maximum(rocks[y,:]) != 0
-        @show y
-        break
+# added = zeros(Int, 5)
+# for i = 1:5
+#     global rocks, jetpatterns
+#     rocks, jetpatterns = simulate(rocks, rocktypes[i])
+#     added[i] = height(rocks)
+# end
+# @show added
+
+reps = Dict()
+rmap = Dict()
+pattern = []
+for n = 1:2000
+    row = zeros(Int,5)
+    h0 = height(rocks)
+    for i = 1:5
+        global rocks, jetpatterns
+        rocks, jetpatterns = simulate(rocks, rocktypes[i])
+        row[i] = height(rocks) - h0
     end
+    if !(row in keys(reps))
+        reps[row] = length(reps) + 1
+        rmap[reps[row]] = row
+    end
+    push!(pattern, reps[row])
 end
+@show length(reps)
+#@show pattern
+i = findfirst(pattern .== length(reps))
+j = findfirst(pattern[i+1:end] .== length(reps))
+start = pattern[1:i]
+loop = pattern[i+1:i+j]
+
+@show length(start)
+@show length(loop)
+
+assembled = vcat(start, loop, loop)
+# @show assembled
+# @show assembled == pattern[1:length(start)+length(loop)*2]
+
+target = div(1000000000000, 5)
+target -= length(start)
+n = div(target, length(loop))
+m = target - length(loop)*n
+@show n
+
+task2 = 0
+for x in start
+    global task2
+    task2 += rmap[x][end]
+end
+for x in loop
+    global task2
+    task2 += rmap[x][end] * n
+end
+for i in 1:m
+    global task2
+    task2 += rmap[loop[i]][end]
+end
+
+@show m
+@show task2
