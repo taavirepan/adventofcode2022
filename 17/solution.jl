@@ -1,77 +1,49 @@
-mutable struct Window
-    y1
-    y2
-end
+function move(rocks, rock, y, dx, dy)
+    h = length(rock) - 1
+    if y + dy < 1 || !all(rocks[y+dy:y+dy+h] .& (rock.<<dx) .== 0)
+        return rock, y, false
+    end
 
-function move!(rocks, window, dx, dy)
-    slice = rocks[window.y1:window.y2,:]
-    for (i,y) in enumerate(window.y1:window.y2)
-        for x = 1:7
-            if rocks[y,x] == 2
-                if !checkbounds(Bool, rocks, y+dy,x+dx)
-                    return false
-                end
-                if rocks[y+dy,x+dx] == 1
-                    return false
-                end
-            end
-        end
+    if dx == -1 && all(x&1 == 0 for x in rock)
+        return rock .>> 1, y, true
+    elseif dx == 1 && all(x&64 == 0 for x in rock)
+        return rock .<< 1, y, true
+    elseif dx == 0
+        return rock, y + dy, true
     end
-    cleared = copy(slice)
-    cleared[cleared .== 2] .= 0
-    rocks[window.y1:window.y2,:] = cleared
-    for (i,y) in enumerate(window.y1:window.y2)
-        for x = 1:7
-            if slice[i,x] == 2
-                rocks[y+dy,x+dx] = slice[i,x]
-            end
-        end
-    end
-    window.y1 += dy
-    window.y2 += dy
-    return true
+    return rock, y, false
 end
 
 function simulate(rocks, kind)
-    y0 = 0
-    for y = size(rocks, 1):-1:1
-        if maximum(rocks[y,:]) != 0
-            y0 = y
-            break
-        end
+    y = height(rocks) + 4
+    h = length(kind) - 1
+    if y + h - length(rocks) > 0
+        rocks = vcat(rocks, zeros(UInt8, y + h - length(rocks)))
     end
-    y0 += 3
-    h = maximum(t for (b,t) in kind)
-    if y0 + h - size(rocks,1) > 0
-        rocks = vcat(rocks, zeros(Int8, y0 + h - size(rocks,1), 7))
-    end
-    for (i,(b,t)) in enumerate(kind)
-        rocks[y0+b:y0+t,2+i] .= 2
-    end
-    # draw(rocks)
-    window = Window(y0+1, y0+h)
+
+    x = 2
     c = -1
+    rock = kind .<< 2
     for i = 1:4*size(rocks,1)
         wind = jetpatterns[(i-1)%length(jetpatterns)+1]
         dx = wind == '<' ? -1 : 1;
-        move!(rocks, window, dx, 0)
-        if !move!(rocks, window, 0, -1)
+        rock, y, _ = move(rocks, rock, y, dx, 0)
+        rock, y, moved = move(rocks, rock, y, 0, -1)
+        if !moved
             c = (i)%length(jetpatterns)+1
             break
         end
     end
     njetpatterns = jetpatterns[c:end] * jetpatterns[1:c-1]
-    slice = rocks[window.y1:window.y2,:]
-    slice[slice .== 2] .= 1
-    rocks[window.y1:window.y2,:] = slice
+    rocks[y:y+h] .|= rock
     return rocks, njetpatterns
 end
 
 function draw(rocks)
     for y=size(rocks,1):-1:1
         line = collect(".......")
-        line[rocks[y,:].==1] .= '#'
-        line[rocks[y,:].==2] .= '@'
+        rocksline = [rocks[y]&2^i != 0 for i=0:6]
+        line[rocksline] .= '#'
         println(join(line,""))
     end
     println("=======")
@@ -79,7 +51,7 @@ end
 
 function height(rocks)
     for y = size(rocks, 1):-1:1
-        if maximum(rocks[y,:]) != 0
+        if rocks[y] != 0
             return y
         end
     end
@@ -87,24 +59,16 @@ function height(rocks)
 end
 
 rocktypes = [
-    [(1, 1), (1, 1), (1, 1), (1, 1)],
-    [(2, 2), (1, 3), (2, 2)],
-    [(1, 1), (1, 1), (1, 3)],
-    [(1, 4)],
-    [(1, 2), (1, 2)]
+    [0b1111],
+    [0b010, 0b111, 0b010],
+    [0b111, 0b100, 0b100],
+    [1, 1, 1, 1],
+    [0b11, 0b11]
 ]
 jetpatterns = readchomp(stdin)
 jp = jetpatterns
 
-rocks = zeros(Int8, 4, 7)
-# added = zeros(Int, 5)
-# for i = 1:5
-#     global rocks, jetpatterns
-#     rocks, jetpatterns = simulate(rocks, rocktypes[i])
-#     added[i] = height(rocks)
-# end
-# @show added
-
+rocks = zeros(UInt8, 4)
 reps = Dict()
 rmap = Dict()
 pattern = []
@@ -115,6 +79,9 @@ for n = 1:2000
         global rocks, jetpatterns
         rocks, jetpatterns = simulate(rocks, rocktypes[i])
         row[i] = height(rocks) - h0
+        if (n-1)*5 + i == 2022
+            println("task1 = ", height(rocks))
+        end
     end
     if !(row in keys(reps))
         reps[row] = length(reps) + 1
@@ -123,7 +90,6 @@ for n = 1:2000
     push!(pattern, reps[row])
 end
 @show length(reps)
-#@show pattern
 i = findfirst(pattern .== length(reps))
 j = findfirst(pattern[i+1:end] .== length(reps))
 start = pattern[1:i]
@@ -131,10 +97,6 @@ loop = pattern[i+1:i+j]
 
 @show length(start)
 @show length(loop)
-
-assembled = vcat(start, loop, loop)
-# @show assembled
-# @show assembled == pattern[1:length(start)+length(loop)*2]
 
 target = div(1000000000000, 5)
 target -= length(start)
