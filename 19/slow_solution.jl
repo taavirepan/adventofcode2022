@@ -18,53 +18,81 @@ function parsebp(data)
     return costs
 end
 
-function solve(blueprint, target, magic)
-    production = [1,0,0,0]
-    surplus = [0,0,0,0]
-    for t = 1:24
-        canbuild = [all(surplus .>= blueprint[i]) && production[i]<target[i] for i=1:4]
-        i = findlast(canbuild)
-
-        if i != nothing
-            if magic%2 == 1
-                canbuild[findlast(canbuild)] = false
-            end
-            i = findlast(canbuild)
-            magic = div(magic, 2)
-        end
-
-        if i != nothing
-            production[i] += 1
-            surplus[i] -= 1
-            surplus .-= blueprint[i]
-        end
-        surplus .+= production
-    end
-    surplus[4], magic!=0
+mutable struct State
+	time
+	production
+	surplus
+	upper_bound
 end
 
-# 22232344
-function solve(blueprint)
-    best = 0
-    for r1 = 1:24
-        for r2 = 1:24
-            for r3 = 1:24
-                for r4 = 1:24
-                    if r1+r2+r3+r4 >= 24
-                        break
-                    end
-                    for magic = 0:2^6
-                        cur, toofar = solve(blueprint, [r1, r2, r3, r4], magic)
-                        best = max(best, cur)
-                        if toofar
-                            break
-                        end
-                    end
-                end
-            end
-        end
-    end
-    best
+function build_miner(state, index, miner, stop)
+	if any(state.production .>= [2, 7, 5, 9])
+		#return
+	end
+
+	surplus = copy(state.surplus)
+	self = [index == i for i=1:4]
+	for t = state.time+1:stop
+		if all(surplus .>= miner)
+			return State(t, state.production .+ self, surplus .- miner .+ state.production, 9999)
+		end
+		surplus .+= state.production
+	end
+end
+
+function upper_bound(state, blueprint, stop)
+	production = copy(state.production)
+	surplus = copy(state.surplus)
+	for t = state.time:stop
+		for i in [1, 4, 3, 2]
+			miner = blueprint[i]
+			if all(surplus .>= miner)
+				production[i] += 1
+				surplus[i] -= 1
+				if i in [3,4]
+					surplus[i-1] -= miner[i-1]
+				end
+				if i == 4
+					break
+				end
+			end
+		end
+		surplus .+= production
+	end
+	return surplus[4]
+end
+
+function solve(blueprint, stop=32)
+	start = State(0, [1, 0, 0, 0], [0, 0, 0, 0], 9999)
+	last_step = [start]
+	best = 0
+	l = ReentrantLock()
+	while length(last_step) > 0
+		current_step = []
+		for state in last_step
+			best = max(best, state.production[4] * (stop - state.time) + state.surplus[4])
+		end
+		Threads.@threads for n in 1:length(last_step)
+			state = last_step[n]
+			if state.upper_bound < best
+				continue
+			end
+			for i = 1:4
+				s = build_miner(state, i, blueprint[i], stop)
+				if s != nothing
+					s.upper_bound = upper_bound(s, blueprint, stop)
+					if s.upper_bound > best
+						lock(l) do
+							push!(current_step, s)
+						end
+					end
+				end
+			end
+		end
+		last_step = current_step
+		@show best, length(last_step)
+	end
+	return best
 end
 
 names = Dict("ore"=>1, "clay"=>2, "obsidian"=>3, "geode"=>4)
@@ -73,9 +101,6 @@ for (i,line) in enumerate(readlines(stdin))
     global cutoff = 0
     data = collect(eachmatch(r"(\w+) robot costs (\d+) (\w+)(?: and (\d+) (\w+))?", line))
     blueprint = parsebp(data)
-    best = solve(blueprint)
-    global task1 += i*best
-    @show i,best
+    @show solve(blueprint)
 end
-@show task1
-@show task1 == 1144
+
