@@ -13,9 +13,6 @@ function run(data, v1, op, v2)
     if op == "-"
         return v1 - v2
     end
-    if op == "=="
-        return v1 - v2
-    end
 end
 run(data, value) = value
 
@@ -24,7 +21,7 @@ function eval(data, v)
     return run(data, data["root"]...)
 end
 
-function find(data, a, b)
+function find(data, a, b) # doesn't work with sample input at the moment
     a1 = eval(data, a)
     a2 = eval(data, a+1)
     b1 = eval(data, b)
@@ -33,10 +30,8 @@ function find(data, a, b)
         if a + 1 >= b
             return b
         end
-        @show (a,b) => (a1, b1)
         m = div(a+b, 2)
         mv = eval(data, m)
-        @show m, mv
         if mv > 0
             return find(data, m, b)
         else
@@ -58,15 +53,10 @@ for line in readlines(stdin)
     if m1 != nothing
         data[m1[1]] = [parse(BigInt, m1[2])]
     end
-    if m2 != nothing && m2[1] == "root"
-        data[m2[1]] = [m2[2], "==", m2[4]]
-    elseif m2 != nothing
+    if m2 != nothing
         data[m2[1]] = [m2[2], m2[3], m2[4]]
     end
 end
 @show run(data, data["root"]...)
-# @show data["root"]
-# @show data["humn"]
+data["root"] = [data["root"][1], "-", data["root"][3]]
 @show find(data, BigInt(1), BigInt(100))
-
-# wrong 3032671800355
