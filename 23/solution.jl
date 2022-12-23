@@ -69,11 +69,19 @@ end
 data = hcat(data...)
 elves = Set([[i[1], i[2]] for i in findall(data .== '#')])
 draw(elves)
-@show result(elves)
+# @show result(elves)
 # @show elves
-for i = 1:10
-    global elves = process(elves, (i-1)%4)
-    draw(elves)
+for i = 1:100000
+    if i%1000 == 0
+        @show i
+    end
+    
+    enew = process(elves, (i-1)%4)
+    if enew == elves
+        @show i
+        break
+    end
+    global elves = enew
 end
 # @show elves
-@show result(elves)
+# @show result(elves)
