@@ -26,10 +26,6 @@ mutable struct State
 end
 
 function build_miner(state, index, miner, stop)
-	if any(state.production .>= [2, 7, 5, 9])
-		#return
-	end
-
 	surplus = copy(state.surplus)
 	self = [index == i for i=1:4]
 	for t = state.time+1:stop
@@ -42,8 +38,8 @@ end
 
 function upper_bound(state, blueprint, stop)
 	production = copy(state.production)
-	surplus = copy(state.surplus)
-	for t = state.time:stop
+	surplus = copy(state.surplus) .+ production
+	for t = state.time+1:stop
 		for i in [1, 4, 3, 2]
 			miner = blueprint[i]
 			if all(surplus .>= miner)
@@ -64,33 +60,23 @@ end
 
 function solve(blueprint, stop=32)
 	start = State(0, [1, 0, 0, 0], [0, 0, 0, 0], 9999)
-	last_step = [start]
+	stack = [start]
 	best = 0
-	l = ReentrantLock()
-	while length(last_step) > 0
-		current_step = []
-		for state in last_step
-			best = max(best, state.production[4] * (stop - state.time) + state.surplus[4])
+	while length(stack) > 0
+		state = pop!(stack)
+		best = max(best, state.production[4] * (stop - state.time) + state.surplus[4])
+		if state.upper_bound <= best
+			continue
 		end
-		Threads.@threads for n in 1:length(last_step)
-			state = last_step[n]
-			if state.upper_bound < best
-				continue
-			end
-			for i = 1:4
-				s = build_miner(state, i, blueprint[i], stop)
-				if s != nothing
-					s.upper_bound = upper_bound(s, blueprint, stop)
-					if s.upper_bound > best
-						lock(l) do
-							push!(current_step, s)
-						end
-					end
+		for i = 1:4
+			s = build_miner(state, i, blueprint[i], stop)
+			if s != nothing
+				s.upper_bound = upper_bound(s, blueprint, stop)
+				if s.upper_bound > best
+					push!(stack, s)
 				end
 			end
 		end
-		last_step = current_step
-		@show best, length(last_step)
 	end
 	return best
 end
