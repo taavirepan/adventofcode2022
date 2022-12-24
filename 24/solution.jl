@@ -27,8 +27,8 @@ function simulate(time)
     return cache[time]
 end
 
-function search(start, stop)
-    queue = [[0, start]]
+function search(time, start, stop)
+    queue = [[time, start]]
     mt = 0
     visited = Set()
     while length(queue) > 0
@@ -74,7 +74,9 @@ cache[0] = map
 start = findfirst(map[1,:] .== 0)
 stop = findfirst(map[end,:] .== 0)
 
-@show search([1, start], [size(map, 1), stop])
+@show loop1 = search(0, [1, start], [size(map, 1), stop])
+@show loop2 = search(loop1, [size(map, 1), stop], [1, start])
+@show loop3 = search(loop2, [1, start], [size(map, 1), stop])
 
 function display(map)
     for row in eachrow(map)
